@@ -32,6 +32,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -56,6 +57,10 @@ public class EditorActivity extends AppCompatActivity implements
     private EditText quantityEditText;
     private EditText supplierNameEditText;
     private EditText supplierPhoneEditText;
+
+    private Button plusButton;
+    private Button minusButton;
+    private Button orderButton;
 
     private boolean bookHasChanged = false;
 
@@ -86,12 +91,21 @@ public class EditorActivity extends AppCompatActivity implements
         Intent intent = getIntent();
         currentBookUri = intent.getData();
 
+        plusButton = (Button) findViewById(R.id.button_plus);
+        minusButton = (Button) findViewById(R.id.button_minus);
+        orderButton = (Button) findViewById(R.id.button_order);
+
         // If the intent DOES NOT contain a book content URI, then we know that we are
         // creating a new book.
         if (currentBookUri == null) {
             // This is a new book, so change the app bar to say "Add a Book"
             setTitle(getString(R.string.editor_activity_title_add_book));
             invalidateOptionsMenu();
+
+            plusButton.setVisibility(View.GONE);
+            minusButton.setVisibility(View.GONE);
+            orderButton.setVisibility(View.GONE);
+
 
         } else {
             // Otherwise this is an existing book, so change app bar to say "Edit Book"
@@ -100,6 +114,8 @@ public class EditorActivity extends AppCompatActivity implements
             // Initialize a loader to read the book data from the database
             // and display the current values in the editor
             getLoaderManager().initLoader(EXISTING_BOOK_LOADER, null, this);
+
+
         }
 
         // Find all relevant views that we will need to read user input from
@@ -142,9 +158,8 @@ public class EditorActivity extends AppCompatActivity implements
         }
 
         if (!TextUtils.isEmpty(bookNameString) && !TextUtils.isEmpty(bookPriceString)
-                        && !TextUtils.isEmpty(supplierNameString)) {
+                && !TextUtils.isEmpty(supplierNameString)) {
             containsAllEssentialData = true;
-
 
             ContentValues values = new ContentValues();
             values.put(BookContract.BookEntry.COLUMN_BOOK_NAME, bookNameString);
@@ -219,7 +234,7 @@ public class EditorActivity extends AppCompatActivity implements
                 // Save book to database
                 saveBook();
                 // Exit activity
-                if(containsAllEssentialData) {
+                if (containsAllEssentialData) {
                     finish();
                 } else {
                     showMissingInformationDialog();
@@ -324,9 +339,9 @@ public class EditorActivity extends AppCompatActivity implements
             // Extract out the value from the Cursor for the given column index
             String name = cursor.getString(nameColumnIndex);
             double price = cursor.getDouble(priceColumnIndex);
-            int quantity = cursor.getInt(quantityColumnIndex);
+            final int quantity = cursor.getInt(quantityColumnIndex);
             String supplierName = cursor.getString(supplierNameColumnIndex);
-            int supplierPhone = cursor.getInt(supplierPhoneColumnIndex);
+            final int supplierPhone = cursor.getInt(supplierPhoneColumnIndex);
 
             // Update the views on the screen with the values from the database
             bookNameEditText.setText(name);
@@ -334,6 +349,36 @@ public class EditorActivity extends AppCompatActivity implements
             quantityEditText.setText(Integer.toString(quantity));
             supplierNameEditText.setText(supplierName);
             supplierPhoneEditText.setText(Integer.toString(supplierPhone));
+            plusButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    ContentValues values = new ContentValues();
+
+                    values.put(BookEntry.COLUMN_BOOK_QUANTITY, (quantity + 1));
+                    int rowsAffected = getContentResolver().update(currentBookUri, values, null, null);
+
+                }
+            });
+            minusButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    ContentValues values = new ContentValues();
+                    if (quantity > 1) {
+                        values.put(BookEntry.COLUMN_BOOK_QUANTITY, (quantity - 1));
+                        int rowsAffected = getContentResolver().update(currentBookUri, values, null, null);
+                    }
+                }
+            });
+            orderButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(Intent.ACTION_DIAL);
+                    intent.setData(Uri.parse("tel:" + supplierPhone));
+                    startActivity(intent);
+                }
+            });
         }
 
     }

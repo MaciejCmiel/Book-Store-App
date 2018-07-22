@@ -80,9 +80,9 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void insertDummyData() {
-        insertBook("Dark Knight", 35.99, 50, "Booker", "789345123");
-        insertBook("All about fruits", 27.99, 25, "Booker", "789345123");
-        insertBook("Blue Dragon", 34.99, 50, "White Raven", "976543343");
+        insertBook("Dark Knight", 35.49, 50, "White Raven", "976543343");
+        insertBook("All about fruits", 27.49, 25, "Booker", "789345123");
+        insertBook("Cheap book", 2.49, 25, "Booker", "789345123");
     }
 
     private void insertBook(String name, double price, int quantity, String supplierName, String supplierPhone) {

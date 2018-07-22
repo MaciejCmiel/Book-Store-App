@@ -15,14 +15,19 @@
  */
 package com.example.macx.bookstoreapp;
 
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CursorAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.macx.bookstoreapp.data.BookContract.BookEntry;
 
@@ -69,11 +74,12 @@ public class BookCursorAdapter extends CursorAdapter {
      *                correct row.
      */
     @Override
-    public void bindView(View view, Context context, Cursor cursor) {
+    public void bindView(View view, final Context context, Cursor cursor) {
         // Find individual views that we want to modify in the list item layout
         TextView nameTextView = (TextView) view.findViewById(R.id.product_name);
         TextView priceTextView = (TextView) view.findViewById(R.id.price);
         TextView quantityTextView = (TextView) view.findViewById(R.id.quantity);
+
 
         // Find the columns of book attributes that we're interested in
         int nameColumnIndex = cursor.getColumnIndex(BookEntry.COLUMN_BOOK_NAME);
@@ -82,12 +88,32 @@ public class BookCursorAdapter extends CursorAdapter {
 
         // Read the book attributes from the Cursor for the current book
         String bookTitle = cursor.getString(nameColumnIndex);
-        Double price = Double.parseDouble(cursor.getString(priceColumnIndex));
+        final Double price = Double.parseDouble(cursor.getString(priceColumnIndex));
         String quantity = cursor.getString(quantityColumnIndex);
+
 
         // Update the TextViews with the attributes for the current book
         nameTextView.setText(bookTitle);
         priceTextView.setText(String.format("%.2f", price));
         quantityTextView.setText(quantity);
+
+        final Uri currentBookUri = ContentUris.withAppendedId(BookEntry.CONTENT_URI,
+                cursor.getInt(cursor.getColumnIndexOrThrow(BookEntry._ID)));
+
+        Button saleButton = (Button) view.findViewById(R.id.sale_button);
+
+        saleButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                ContentValues values = new ContentValues();
+                if (price > 1) {
+                    values.put(BookEntry.COLUMN_BOOK_PRICE, (price - 1.0));
+                    int rowsAffected = context.getContentResolver().update(currentBookUri, values, null, null);
+                }
+            }
+        });
+
+
     }
 }

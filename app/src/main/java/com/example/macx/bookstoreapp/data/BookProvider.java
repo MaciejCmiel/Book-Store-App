@@ -217,7 +217,7 @@ public class BookProvider extends ContentProvider {
 
         if (values.containsKey(BookEntry.COLUMN_BOOK_PRICE)) {
             Integer price = values.getAsInteger(BookEntry.COLUMN_BOOK_PRICE);
-            if (price == null || price <= 0) {
+            if (price == null || price < 0) {
                 throw new IllegalArgumentException("Book requires valid price");
             }
         }

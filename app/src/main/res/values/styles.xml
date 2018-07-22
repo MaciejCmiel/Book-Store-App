@@ -44,4 +44,11 @@
 		<item name="colorAccent">@color/colorAccent</item>
 	</style>
 
+	<style name="buttonStyle">
+		<item name="android:focusable">false</item>
+		<item name="android:focusableInTouchMode">false</item>
+		<item name="android:background">@color/colorPrimaryDark</item>
+		<item name="android:textColor">@android:color/white</item>
+	</style>
+
 </resources>
