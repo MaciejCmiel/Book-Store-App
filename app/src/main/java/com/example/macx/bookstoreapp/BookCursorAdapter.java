@@ -88,14 +88,14 @@ public class BookCursorAdapter extends CursorAdapter {
 
         // Read the book attributes from the Cursor for the current book
         String bookTitle = cursor.getString(nameColumnIndex);
-        final Double price = Double.parseDouble(cursor.getString(priceColumnIndex));
-        String quantity = cursor.getString(quantityColumnIndex);
+        Double price = Double.parseDouble(cursor.getString(priceColumnIndex));
+        final Integer quantity = Integer.parseInt(cursor.getString(quantityColumnIndex));
 
 
         // Update the TextViews with the attributes for the current book
         nameTextView.setText(bookTitle);
         priceTextView.setText(String.format("%.2f", price));
-        quantityTextView.setText(quantity);
+        quantityTextView.setText(Integer.toString(quantity));
 
         final Uri currentBookUri = ContentUris.withAppendedId(BookEntry.CONTENT_URI,
                 cursor.getInt(cursor.getColumnIndexOrThrow(BookEntry._ID)));
@@ -107,8 +107,8 @@ public class BookCursorAdapter extends CursorAdapter {
             public void onClick(View v) {
 
                 ContentValues values = new ContentValues();
-                if (price > 1) {
-                    values.put(BookEntry.COLUMN_BOOK_PRICE, (price - 1.0));
+                if (quantity > 0) {
+                    values.put(BookEntry.COLUMN_BOOK_QUANTITY, (quantity - 1));
                     int rowsAffected = context.getContentResolver().update(currentBookUri, values, null, null);
                 }
             }

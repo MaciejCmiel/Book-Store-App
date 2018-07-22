@@ -148,9 +148,9 @@ public class MainActivity extends AppCompatActivity implements
 
         int rowsDeleted = getContentResolver().delete(BookEntry.CONTENT_URI, null, null);
         if (rowsDeleted == 0) {
-            Toast.makeText(this, "Error occurred when deleting books", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.error_occured_when_deleting, Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(this, "All books deleted", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.deleting_successful, Toast.LENGTH_SHORT).show();
         }
     }
 

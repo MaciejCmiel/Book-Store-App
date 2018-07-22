@@ -157,6 +157,11 @@ public class BookProvider extends ContentProvider {
             throw new IllegalArgumentException("Book requires a name");
         }
 
+        Integer quantity = values.getAsInteger(BookEntry.COLUMN_BOOK_SUPPLIER_PHONE);
+        if (quantity == null) {
+            throw new IllegalArgumentException("Book requires valid quantity");
+        }
+
         // Check that the price is valid
         Double price = values.getAsDouble(BookEntry.COLUMN_BOOK_PRICE);
         if (price == null || price <= 0) {
@@ -166,6 +171,11 @@ public class BookProvider extends ContentProvider {
         String supplierName = values.getAsString(BookEntry.COLUMN_BOOK_SUPPLIER_NAME);
         if (supplierName == null) {
             throw new IllegalArgumentException("Book requires supplier name");
+        }
+
+        Integer supplierPhone = values.getAsInteger(BookEntry.COLUMN_BOOK_SUPPLIER_PHONE);
+        if (supplierPhone == null) {
+            throw new IllegalArgumentException("Book requires supplier phone");
         }
 
         SQLiteDatabase database = dbHelper.getWritableDatabase();

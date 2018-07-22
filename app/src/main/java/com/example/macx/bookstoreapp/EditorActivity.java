@@ -158,20 +158,18 @@ public class EditorActivity extends AppCompatActivity implements
         }
 
         if (!TextUtils.isEmpty(bookNameString) && !TextUtils.isEmpty(bookPriceString)
-                && !TextUtils.isEmpty(supplierNameString)) {
+                && !TextUtils.isEmpty(supplierNameString) && !TextUtils.isEmpty(supplierPhoneString)
+                && !TextUtils.isEmpty(quantityString)) {
             containsAllEssentialData = true;
 
             ContentValues values = new ContentValues();
+
+            values.put(BookContract.BookEntry.COLUMN_BOOK_QUANTITY, Integer.parseInt(quantityString));
             values.put(BookContract.BookEntry.COLUMN_BOOK_NAME, bookNameString);
             values.put(BookContract.BookEntry.COLUMN_BOOK_PRICE, Double.parseDouble(bookPriceString));
             values.put(BookContract.BookEntry.COLUMN_BOOK_SUPPLIER_NAME, supplierNameString);
             values.put(BookContract.BookEntry.COLUMN_BOOK_SUPPLIER_PHONE, supplierPhoneString);
 
-            int quantity = 0;
-            if (!TextUtils.isEmpty(quantityString)) {
-                quantity = Integer.parseInt(quantityString);
-            }
-            values.put(BookContract.BookEntry.COLUMN_BOOK_QUANTITY, quantity);
 
             if (currentBookUri == null) {
                 Uri newUri = getContentResolver().insert(BookContract.BookEntry.CONTENT_URI, values);
@@ -375,8 +373,10 @@ public class EditorActivity extends AppCompatActivity implements
                 @Override
                 public void onClick(View v) {
                     Intent intent = new Intent(Intent.ACTION_DIAL);
-                    intent.setData(Uri.parse("tel:" + supplierPhone));
-                    startActivity(intent);
+                    if (intent.resolveActivity(getPackageManager()) != null) {
+                        intent.setData(Uri.parse("tel:" + supplierPhone));
+                        startActivity(intent);
+                    }
                 }
             });
         }
