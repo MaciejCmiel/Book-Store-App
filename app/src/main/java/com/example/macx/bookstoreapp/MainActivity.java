@@ -1,100 +1,184 @@
 package com.example.macx.bookstoreapp;
 
+import android.app.AlertDialog;
+import android.app.LoaderManager;
+import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.CursorLoader;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.Loader;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.provider.BaseColumns;
+import android.net.Uri;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.widget.TextView;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ListView;
+import android.widget.Toast;
 
 import com.example.macx.bookstoreapp.data.BookContract.*;
-import com.example.macx.bookstoreapp.data.BookDbHelper;
 
-public class MainActivity extends AppCompatActivity
-{
+public class MainActivity extends AppCompatActivity implements
+        LoaderManager.LoaderCallbacks<Cursor> {
 
-	TextView text;
-	private BookDbHelper bookDbHelper;
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState)
-	{
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
+    private static final int BOOK_LOADER = 0;
 
-		bookDbHelper = new BookDbHelper(this);
+    private BookCursorAdapter bookAdapter;
 
-		insert("Dark Knight", 35.99, 50, "Booker", "789-345-123");
-		insert("All about fruits", 27.99, 25, "Booker", "789-345-123");
-		insert("Blue Dragon", 34.99, 50, "White Raven", "976-543-343");
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-		displayDatabase();
-	}
+        // Setup FAB to open EditorActivity
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, EditorActivity.class);
+                startActivity(intent);
+            }
+        });
 
-	private void displayDatabase()
-	{
-		SQLiteDatabase db = bookDbHelper.getReadableDatabase();
+// Find the ListView which will be populated with the book data
+        ListView bookListView = (ListView) findViewById(R.id.list);
 
-		String[] projection = {
-				BaseColumns._ID,
-				BookEntry.COLUMN_BOOK_NAME,
-				BookEntry.COLUMN_BOOK_PRICE,
-				BookEntry.COLUMN_BOOK_QUANTITY
-		};
+        // Find and set empty view on the ListView, so that it only shows when the list has 0 items.
+        View emptyView = findViewById(R.id.empty_view);
+        bookListView.setEmptyView(emptyView);
 
-		Cursor cursor = db.query(BookEntry.TABLE_NAME,
-				projection,
-				null,
-				null,
-				null,
-				null,
-				null);
+        // Setup an Adapter to create a list item for each row of book data in the Cursor.
+        // There is no book data yet (until the loader finishes) so pass in null for the Cursor.
+        bookAdapter = new BookCursorAdapter(this, null);
+        bookListView.setAdapter(bookAdapter);
 
-		try
-		{
-			TextView displayView = (TextView) findViewById(R.id.main_activity_text_view);
-			displayView.setText(getString(R.string.number_of_rows_text, cursor.getCount()));
+        // Setup the item click listener
+        bookListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                // Create new intent to go to {@link EditorActivity}
+                Intent intent = new Intent(MainActivity.this, EditorActivity.class);
 
-			displayView.append(BookEntry._ID + "\t\t" +
-					BookEntry.COLUMN_BOOK_NAME + "\t\t" +
-					BookEntry.COLUMN_BOOK_PRICE + "\t\t" +
-					BookEntry.COLUMN_BOOK_QUANTITY + "\n");
+                Uri currentBookUri = ContentUris.withAppendedId(BookEntry.CONTENT_URI, id);
 
-			int idColumnIndex = cursor.getColumnIndex(BookEntry._ID);
-			int nameColumnIndex = cursor.getColumnIndex(BookEntry.COLUMN_BOOK_NAME);
-			int priceColumnIndex = cursor.getColumnIndex(BookEntry.COLUMN_BOOK_PRICE);
-			int quantityColumnIndex = cursor.getColumnIndex(BookEntry.COLUMN_BOOK_QUANTITY);
+                // Set the URI on the data field of the intent
+                intent.setData(currentBookUri);
 
-			while (cursor.moveToNext()){
-				int currentId = cursor.getInt(idColumnIndex);
-				String currentName = cursor.getString(nameColumnIndex);
-				String currentPrice = cursor.getString(priceColumnIndex);
-				String currentQuantity = cursor.getString(quantityColumnIndex);
-				displayView.append(("\n" +
-						currentId + "\t\t" +
-						currentName + "\t\t" +
-						currentPrice + "\t\t" +
-						currentQuantity));
-			}
+                // Launch the {@link EditorActivity} to display the data for the current book.
+                startActivity(intent);
+            }
+        });
 
-		} finally
-		{
-			cursor.close();
-		}
-	}
+        // Kick off the loader
+        getLoaderManager().initLoader(BOOK_LOADER, null, this);
 
-	private void insert(String name, double price, int quantity, String supplierName, String supplierPhone)
-	{
-		SQLiteDatabase db = bookDbHelper.getWritableDatabase();
+    }
 
-		ContentValues values = new ContentValues();
-		values.put(BookEntry.COLUMN_BOOK_NAME, name);
-		values.put(BookEntry.COLUMN_BOOK_PRICE, price);
-		values.put(BookEntry.COLUMN_BOOK_QUANTITY, quantity);
-		values.put(BookEntry.COLUMN_BOOK_SUPPLIER_NAME, supplierName);
-		values.put(BookEntry.COLUMN_BOOK_SUPPLIER_PHONE, supplierPhone);
+    private void insertDummyData() {
+        insertBook("Dark Knight", 35.99, 50, "Booker", "789345123");
+        insertBook("All about fruits", 27.99, 25, "Booker", "789345123");
+        insertBook("Blue Dragon", 34.99, 50, "White Raven", "976543343");
+    }
 
-		db.insert(BookEntry.TABLE_NAME, null, values);
-	}
+    private void insertBook(String name, double price, int quantity, String supplierName, String supplierPhone) {
+
+        ContentValues values = new ContentValues();
+        values.put(BookEntry.COLUMN_BOOK_NAME, name);
+        values.put(BookEntry.COLUMN_BOOK_PRICE, price);
+        values.put(BookEntry.COLUMN_BOOK_QUANTITY, quantity);
+        values.put(BookEntry.COLUMN_BOOK_SUPPLIER_NAME, supplierName);
+        values.put(BookEntry.COLUMN_BOOK_SUPPLIER_PHONE, supplierPhone);
+
+        getContentResolver().insert(BookEntry.CONTENT_URI, values);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu options from the res/menu/menu_catalog.xml file.
+        // This adds menu items to the app bar.
+        getMenuInflater().inflate(R.menu.menu_catalog, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // User clicked on a menu option in the app bar overflow menu
+        switch (item.getItemId()) {
+            // Respond to a click on the "Insert dummy data" menu option
+            case R.id.action_insert_dummy_data:
+                insertDummyData();
+                return true;
+            // Respond to a click on the "Delete all entries" menu option
+            case R.id.action_delete_all_entries:
+                showDeleteConfirmationDialog();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void showDeleteConfirmationDialog() {
+        // Create an AlertDialog.Builder and set the message, and click listeners
+        // for the postivie and negative buttons on the dialog.
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.delete_all_confirmation_dialog);
+        builder.setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                deleteAllBooks();
+            }
+        });
+        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                if (dialog != null) {
+                    dialog.dismiss();
+                }
+            }
+        });
+
+        // Create and show the AlertDialog
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    private void deleteAllBooks() {
+
+        int rowsDeleted = getContentResolver().delete(BookEntry.CONTENT_URI, null, null);
+        if (rowsDeleted == 0) {
+            Toast.makeText(this, "Error occurred when deleting books", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "All books deleted", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        // Define a projection that specifies the columns from the table we care about.
+        String[] projection = {
+                BookEntry._ID,
+                BookEntry.COLUMN_BOOK_NAME,
+                BookEntry.COLUMN_BOOK_PRICE,
+                BookEntry.COLUMN_BOOK_QUANTITY};
+
+        // This loader will execute the ContentProvider's query method on a background thread
+        return new CursorLoader(this,   // Parent activity context
+                BookEntry.CONTENT_URI,           // Provider content URI to query
+                projection,                      // Columns to include in the resulting Cursor
+                null,                   // No selection clause
+                null,                   // No selection arguments
+                null);                  // Default sort order
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        bookAdapter.swapCursor(data);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        bookAdapter.swapCursor(null);
+    }
 }
