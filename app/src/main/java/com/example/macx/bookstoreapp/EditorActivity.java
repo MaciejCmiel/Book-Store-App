@@ -235,7 +235,8 @@ public class EditorActivity extends AppCompatActivity implements
                 if (containsAllEssentialData) {
                     finish();
                 } else {
-                    showMissingInformationDialog();
+                    //I think that my dialog was better than toast,
+                    Toast.makeText(EditorActivity.this, R.string.you_must_fill_in_all_fields, Toast.LENGTH_SHORT).show();
                 }
                 return true;
             // Respond to a click on the "Delete" menu option
@@ -363,7 +364,7 @@ public class EditorActivity extends AppCompatActivity implements
                 public void onClick(View v) {
 
                     ContentValues values = new ContentValues();
-                    if (quantity > 1) {
+                    if (quantity > 0) {
                         values.put(BookEntry.COLUMN_BOOK_QUANTITY, (quantity - 1));
                         int rowsAffected = getContentResolver().update(currentBookUri, values, null, null);
                     }
@@ -464,28 +465,4 @@ public class EditorActivity extends AppCompatActivity implements
         }
     }
 
-    private void showMissingInformationDialog() {
-        // Create an AlertDialog.Builder and set the message, and click listeners
-        // for the postivie and negative buttons on the dialog.
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(R.string.missing_information_dialog_message);
-        builder.setPositiveButton(R.string.proceed, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                finish();
-            }
-        });
-        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                // User clicked the "Cancel" button, so dismiss the dialog
-                // and continue editing the book.
-                if (dialog != null) {
-                    dialog.dismiss();
-                }
-            }
-        });
-
-        // Create and show the AlertDialog
-        AlertDialog alertDialog = builder.create();
-        alertDialog.show();
-    }
 }

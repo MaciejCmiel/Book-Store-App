@@ -50,6 +50,7 @@
 	<string name="order_book"> ORDER THIS BOOK </string>
 	<string name="error_occured_when_deleting">Error occurred when deleting books</string>
 	<string name="deleting_successful">All books deleted</string>
+	<string name="you_must_fill_in_all_fields">You must fill in all fields</string>
 
 
 </resources>
